@@ -93,14 +93,24 @@ namespace SchoolVaccination.API.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
 
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+            if (!allowedExtensions.Contains(extension))
+            {
+                return BadRequest("Invalid file type. Only PDF, JPG, JPEG, and PNG are allowed.");
+            }
+
             var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Certificates");
             if (!Directory.Exists(folderPath))
                 Directory.CreateDirectory(folderPath);
 
-            var extension = Path.GetExtension(file.FileName);
             var fileName = $"student_{id}_certificate{extension}";
             var filePath = Path.Combine(folderPath, fileName);
 
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
