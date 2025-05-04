@@ -12,8 +12,8 @@ using SchoolVaccination.API.Data;
 namespace SchoolVaccination.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250504010853_AddedReports_VaccinationDrive_VaccinationRecord_ReportsData")]
-    partial class AddedReports_VaccinationDrive_VaccinationRecord_ReportsData
+    [Migration("20250504163552_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,6 +32,9 @@ namespace SchoolVaccination.API.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CertificateFileName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
@@ -139,7 +142,7 @@ namespace SchoolVaccination.API.Migrations
                         .IsRequired();
 
                     b.HasOne("SchoolVaccination.API.Models.Student", "Student")
-                        .WithMany()
+                        .WithMany("VaccinationRecords")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -147,6 +150,11 @@ namespace SchoolVaccination.API.Migrations
                     b.Navigation("Drive");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("SchoolVaccination.API.Models.Student", b =>
+                {
+                    b.Navigation("VaccinationRecords");
                 });
 #pragma warning restore 612, 618
         }

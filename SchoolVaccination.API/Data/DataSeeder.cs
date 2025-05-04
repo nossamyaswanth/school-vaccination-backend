@@ -22,14 +22,13 @@ namespace SchoolVaccination.API.Data
             if (!context.Students.Any())
             {
                 context.Students.AddRange(
-                    new Student { FullName = "Ravi Kumar", Grade = "5th", DateOfBirth = new DateTime(2012, 6, 15), IsVaccinated = true, CertificateFileName = "student_1_certificate.pdf" },
-                    new Student { FullName = "Anjali Sharma", Grade = "6th", DateOfBirth = new DateTime(2011, 3, 22), IsVaccinated = false, CertificateFileName = null },
-                    new Student { FullName = "Manish Yadav", Grade = "7th", DateOfBirth = new DateTime(2010, 9, 30), IsVaccinated = true, CertificateFileName = "student_3_certificate.pdf" }
+                    new Student { FullName = "Ravi Kumar", Grade = "5th", DateOfBirth = new DateTime(2012, 6, 15), CertificateFileName = "student_1_certificate.pdf" },
+                    new Student { FullName = "Anjali Sharma", Grade = "6th", DateOfBirth = new DateTime(2011, 3, 22), CertificateFileName = null },
+                    new Student { FullName = "Manish Yadav", Grade = "7th", DateOfBirth = new DateTime(2010, 9, 30), CertificateFileName = "student_3_certificate.pdf" }
                 );
                 context.SaveChanges();
             }
 
-            // Seed Vaccination Drives
             if (!context.VaccinationDrives.Any())
             {
                 context.VaccinationDrives.AddRange(
@@ -39,7 +38,6 @@ namespace SchoolVaccination.API.Data
                 context.SaveChanges();
             }
 
-            // Seed Vaccination Records
             if (!context.VaccinationRecords.Any())
             {
                 var student1 = context.Students.FirstOrDefault(s => s.FullName == "Ravi Kumar");
@@ -82,6 +80,15 @@ namespace SchoolVaccination.API.Data
 
                 context.SaveChanges();
             }
+
+            // Synchronize IsVaccinated field in Students table
+            var students = context.Students.ToList();
+            foreach (var student in students)
+            {
+                student.IsVaccinated = context.VaccinationRecords
+                    .Any(v => v.StudentId == student.Id && v.IsVaccinated);
+            }
+            context.SaveChanges();
         }
     }
 }

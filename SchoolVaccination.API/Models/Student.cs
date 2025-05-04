@@ -13,5 +13,8 @@ namespace SchoolVaccination.API.Models
         public DateTime DateOfBirth { get; set; }
         public bool IsVaccinated { get; set; }
         public string? CertificateFileName { get; set; }
+
+        // Navigation property (optional)
+    public ICollection<VaccinationRecord>? VaccinationRecords { get; set; }
     }
 }

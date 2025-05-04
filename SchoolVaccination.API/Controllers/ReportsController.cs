@@ -25,14 +25,9 @@ namespace SchoolVaccination.API.Controllers
         [HttpGet("summary")]
         public IActionResult GetVaccinationSummary()
         {
+            // Fetch data without recalculating IsVaccinated
             var totalStudents = _context.Students.Count();
-
-            var vaccinatedCount = _context.VaccinationRecords
-                .Where(v => v.IsVaccinated)
-                .Select(v => v.StudentId)
-                .Distinct()
-                .Count();
-
+            var vaccinatedCount = _context.Students.Count(s => s.IsVaccinated);
             var notVaccinated = totalStudents - vaccinatedCount;
 
             var driveSummary = _context.VaccinationDrives

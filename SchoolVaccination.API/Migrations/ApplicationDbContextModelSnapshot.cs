@@ -139,7 +139,7 @@ namespace SchoolVaccination.API.Migrations
                         .IsRequired();
 
                     b.HasOne("SchoolVaccination.API.Models.Student", "Student")
-                        .WithMany()
+                        .WithMany("VaccinationRecords")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -147,6 +147,11 @@ namespace SchoolVaccination.API.Migrations
                     b.Navigation("Drive");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("SchoolVaccination.API.Models.Student", b =>
+                {
+                    b.Navigation("VaccinationRecords");
                 });
 #pragma warning restore 612, 618
         }
