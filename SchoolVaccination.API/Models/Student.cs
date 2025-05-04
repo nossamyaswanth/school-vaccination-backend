@@ -12,5 +12,6 @@ namespace SchoolVaccination.API.Models
         public string Grade { get; set; }
         public DateTime DateOfBirth { get; set; }
         public bool IsVaccinated { get; set; }
+        public string? CertificateFileName { get; set; }
     }
 }

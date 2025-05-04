@@ -6,9 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolVaccination.API.Data;
 using SchoolVaccination.API.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SchoolVaccination.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class StudentsController : ControllerBase
@@ -83,6 +85,52 @@ namespace SchoolVaccination.API.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpPost("{id}/upload")]
+        public async Task<IActionResult> UploadCertificate(int id, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Certificates");
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            var extension = Path.GetExtension(file.FileName);
+            var fileName = $"student_{id}_certificate{extension}";
+            var filePath = Path.Combine(folderPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var student = await _context.Students.FindAsync(id);
+            if (student == null)
+                return NotFound("Student not found.");
+
+            student.CertificateFileName = fileName;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "File uploaded successfully", FileName = fileName });
+        }
+
+        [HttpGet("{id}/download")]
+        public async Task<IActionResult> DownloadCertificate(int id)
+        {
+            var student = await _context.Students.FindAsync(id);
+            if (student == null || string.IsNullOrEmpty(student.CertificateFileName))
+                return NotFound("Certificate not found.");
+
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Certificates");
+            var filePath = Path.Combine(folderPath, student.CertificateFileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found on server.");
+
+            var contentType = "application/octet-stream";
+            return File(System.IO.File.ReadAllBytes(filePath), contentType, student.CertificateFileName);
         }
     }
 }

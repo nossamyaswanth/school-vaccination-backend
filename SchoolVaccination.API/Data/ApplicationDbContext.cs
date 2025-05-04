@@ -14,5 +14,8 @@ namespace SchoolVaccination.API.Data
         }
 
         public DbSet<Student> Students { get; set; }
+        public DbSet<VaccinationDrive> VaccinationDrives { get; set; }
+        public DbSet<VaccinationRecord> VaccinationRecords { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }
