@@ -12,7 +12,7 @@ using SchoolVaccination.API.Data;
 namespace SchoolVaccination.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250504163552_InitialCreate")]
+    [Migration("20250510115047_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

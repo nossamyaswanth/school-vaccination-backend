@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using SchoolVaccination.API.Data;
 using SchoolVaccination.API.Models;
 using Microsoft.AspNetCore.Authorization;
+using ExcelDataReader;
 
 namespace SchoolVaccination.API.Controllers
 {
@@ -124,6 +125,73 @@ namespace SchoolVaccination.API.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { Message = "File uploaded successfully", FileName = fileName });
+        }
+
+        [HttpPost("upload-excel")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> UploadExcelFile([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (extension != ".xlsx" && extension != ".xls")
+                return BadRequest("Invalid file type. Only .xls and .xlsx files are allowed.");
+
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            var filePath = Path.Combine(folderPath, file.FileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // Register encoding provider for ExcelDataReader
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+            if (!System.IO.File.Exists(filePath))
+                return BadRequest("File not found.");
+
+            try
+            {
+                using (var stream = System.IO.File.Open(filePath, FileMode.Open, FileAccess.Read))
+                {
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        bool isHeaderSkipped = false;
+                        do
+                        {
+                            while (reader.Read())
+                            {
+                                if (!isHeaderSkipped)
+                                {
+                                    isHeaderSkipped = true;
+                                    continue; // Skip header row
+                                }
+
+                                var student = new Student
+                                {
+                                    FullName = reader.GetString(0),
+                                    Grade = reader.GetString(1),
+                                    DateOfBirth = reader.GetDateTime(2),
+                                    IsVaccinated = reader.GetBoolean(3)
+                                };
+
+                                _context.Students.Add(student);
+                            }
+                        } while (reader.NextResult());
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error processing file: {ex.Message}");
+            }
+
+            return Ok(new { Message = "Excel file uploaded successfully", FileName = file.FileName });
         }
 
         [HttpGet("{id}/download")]
